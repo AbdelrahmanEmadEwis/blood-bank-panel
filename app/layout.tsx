@@ -7,8 +7,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Shabaka Panel',
-  description: 'Dashboard for Shabaka System',
+  title: 'Blood Bank Panel',
+  description: 'Dashboard for Blood Bank System',
 };
 
 export const viewport: Viewport = {
