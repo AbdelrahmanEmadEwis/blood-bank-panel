@@ -44,20 +44,21 @@ export async function getCrossMatchAction(id: string): Promise<CrossMatch> {
 }
 
 // sign cross match
-export async function signCrossMatchAction(id: number, signature_code: string): Promise<boolean> {
+export async function signCrossMatchAction(id: number, signature_code: string) {
   const res = await apiClient<any>(`/cross_matches/${id}/sign`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ signature_code }),
+    skipAuthRedirect: true,
   });
 
-  if (res.ok) {
-    revalidatePath(`/dashboard/matches/${id}`);
-    revalidatePath('/dashboard/matches');
-    return true;
+  if (!res.ok) {
+    return { ok: false, error: res.error || 'Failed to sign cross match' };
   }
 
-  throw new Error((res as any).error || 'Failed to sign cross match');
+  revalidatePath(`/dashboard/matches/${id}`);
+  revalidatePath('/dashboard/matches');
+  return { ok: true };
 }
 
 
@@ -87,7 +88,7 @@ export async function createCrossMatchAction(
   if (!res.ok) {
     return {
       status: 'error',
-      message: (res as any).error || 'Failed to initiate cross match.',
+      message: res.error || 'Something went wrong.',
     };
   }
 
@@ -99,18 +100,18 @@ export async function createCrossMatchAction(
 export async function updateCrossMatchStatusAction(
   id: number,
   result: string,
-): Promise<boolean> {
+) {
   const res = await apiClient<CrossMatch>(`/cross_matches/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ final_result: result }),
   });
 
-  if (res.ok) {
-    revalidatePath(`/dashboard/matches/${id}`);
-    revalidatePath('/dashboard/matches');
-    return true;
+  if (!res.ok) {
+    return { ok: false, error: res.error || 'Failed to update cross match status' };
   }
 
-  throw new Error((res as any).error || 'Failed to update cross match status.');
+  revalidatePath(`/dashboard/matches/${id}`);
+  revalidatePath('/dashboard/matches');
+  return { ok: true };
 }

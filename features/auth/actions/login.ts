@@ -26,6 +26,7 @@ export async function loginAction(
     {
       method: 'POST',
       body: JSON.stringify(validated.data),
+      skipAuthRedirect: true,
     },
   );
   if (!res.ok) {

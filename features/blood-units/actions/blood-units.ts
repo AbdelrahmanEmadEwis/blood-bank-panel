@@ -26,7 +26,11 @@ export async function getAllBloodUnitsAction(
   const queryString = buildQueryParams({ ...filters });
   const res = await apiClient<BloodUnit[]>(`/blood_units${queryString}`);
 
-  if (res.ok && res.data && Array.isArray(res.data)) {
+  if (!res.ok) {
+    throw new Error(res.error || 'Failed to fetch blood units via API');
+  }
+
+  if (res.data && Array.isArray(res.data)) {
     return {
       results: res.data,
       count: res.data.length,
@@ -35,17 +39,21 @@ export async function getAllBloodUnitsAction(
     };
   }
 
-  throw new Error((res as any).error || 'Failed to fetch blood units via API');
+  throw new Error('Invalid data format received from API');
 }
 
 // get blood unit by id
 export async function getBloodUnitAction(bloodUnitId: string): Promise<BloodUnitDetail> {
   const res = await apiClient<BloodUnitDetail>(`/blood_units/${bloodUnitId}`);
-  if (res.ok && res.data) {
+  if (!res.ok) {
+    throw new Error(res.error || 'Failed to fetch blood unit details');
+  }
+
+  if (res.data) {
     return res.data;
   }
 
-  throw new Error((res as any).error || 'Failed to fetch blood unit details');
+  throw new Error('No data received from API');
 }
 
 // create blood unit
@@ -76,7 +84,7 @@ export async function createBloodUnitAction(
   if (!res.ok) {
     return {
       status: 'error',
-      message: (res as any).error || 'Failed to create blood unit.',
+      message: res.error || 'Failed to create blood unit.',
     };
   }
 
@@ -115,7 +123,7 @@ export async function editBloodUnitAction(
   if (!res.ok) {
     return {
       status: 'error',
-      message: (res as any).error || 'Failed to update blood unit.',
+      message: res.error || 'Failed to update blood unit.',
     };
   }
 
@@ -124,15 +132,15 @@ export async function editBloodUnitAction(
 }
 
 // delete blood unit
-export async function deleteBloodUnitAction(bloodUnitId: number): Promise<boolean> {
+export async function deleteBloodUnitAction(bloodUnitId: number) {
   const res = await apiClient<{ success?: boolean }>(`/blood_units/${bloodUnitId}`, {
     method: 'DELETE',
   });
 
-  if (res.ok) {
-    revalidatePath('/dashboard/blood-units');
-    return true;
+  if (!res.ok) {
+    return { ok: false, error: res.error || 'Failed to delete blood unit' };
   }
 
-  throw new Error((res as any).error || 'Failed to delete blood unit via API');
+  revalidatePath('/dashboard/blood-units');
+  return { ok: true };
 }

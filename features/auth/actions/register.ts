@@ -30,6 +30,7 @@ export async function registerAction(
   }>(`/employees/register`, {
     method: 'POST',
     body: JSON.stringify(validated.data),
+    skipAuthRedirect: true,
   });
 
   if (!res.ok) {

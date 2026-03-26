@@ -31,7 +31,11 @@ export type CrossMatch = {
   patient: Patient;
   final_result: string;
   signed_at: string | null;
-  signed_by: User | null;
+  signed_by_employee: {
+    id: number;
+    fname: string;
+    lname: string;
+  } | null;
 };
 
 export type PaginatedCrossMatchesResponse = PaginatedResponse<CrossMatch>;

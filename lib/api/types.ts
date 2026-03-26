@@ -8,6 +8,8 @@ export type ApiFailure = {
   ok: false;
   error: string;
   status: number;
+  code?: number;
+  apiStatus?: string;
 };
 
 /** Discriminated union returned by every apiClient call. */
@@ -22,4 +24,6 @@ export type FetchOptions = Omit<RequestInit, 'cache'> & {
   tags?: string[];
   /** Internal flag to prevent infinite refresh token loops. */
   _retry?: boolean;
+  /** Whether to skip the default redirect to login on 401 error. */
+  skipAuthRedirect?: boolean;
 };

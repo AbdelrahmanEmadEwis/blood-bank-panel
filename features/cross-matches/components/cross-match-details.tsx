@@ -66,15 +66,14 @@ export function CrossMatchDetails({ crossMatch }: CrossMatchDetailsProps) {
     if (newStatus === crossMatch.final_result) return;
     
     setIsUpdating(true);
-    try {
-      await updateCrossMatchStatusAction(crossMatch.id, newStatus);
+    const result = await updateCrossMatchStatusAction(crossMatch.id, newStatus);
+    
+    if (result.ok) {
       toast.success(`Result updated to ${newStatus}`);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to update status';
-      toast.error(message);
-    } finally {
-      setIsUpdating(false);
+    } else {
+      toast.error(result.error);
     }
+    setIsUpdating(false);
   };
 
   const handleSign = async () => {
@@ -84,17 +83,16 @@ export function CrossMatchDetails({ crossMatch }: CrossMatchDetailsProps) {
     }
 
     setIsSigning(true);
-    try {
-      await signCrossMatchAction(crossMatch.id, signatureCode);
+    const result = await signCrossMatchAction(crossMatch.id, signatureCode);
+    
+    if (result.ok) {
       toast.success('Cross-match signed successfully');
       setIsDialogOpen(false);
       setSignatureCode('');
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to sign cross-match';
-      toast.error(message);
-    } finally {
-      setIsSigning(false);
+    } else {
+      toast.error(result.error);
     }
+    setIsSigning(false);
   };
 
   return (
@@ -262,9 +260,9 @@ export function CrossMatchDetails({ crossMatch }: CrossMatchDetailsProps) {
                 <div className='space-y-0.5'>
                   <div className='text-xs text-slate-400 uppercase font-medium'>Signed By</div>
                   <div className='text-sm font-semibold text-slate-900'>
-                    {crossMatch.signed_by ? `${crossMatch.signed_by.first_name} ${crossMatch.signed_by.last_name}` : 'Awaiting Signature'}
+                    {crossMatch.signed_by_employee?.fname ? `${crossMatch.signed_by_employee.fname} ${crossMatch.signed_by_employee.lname}` : 'Awaiting Signature'}
                   </div>
-                  {crossMatch.signed_by && <div className='text-[10px] text-slate-500'>{crossMatch.signed_by.email}</div>}
+                 {crossMatch.signed_by_employee && <div className='text-[10px] text-slate-500'>Employee ID: {crossMatch.signed_by_employee.id }</div>}
                 </div>
               </div>
 
@@ -299,6 +297,9 @@ export function CrossMatchDetails({ crossMatch }: CrossMatchDetailsProps) {
                         </DialogDescription>
                       </DialogHeader>
                       <div className='py-4'>
+                        <div className='text-xs text-red-500 mb-2'>
+                          Warning: This action is irreversible. Please double-check the information before proceeding.
+                        </div>
                         <label className='text-sm font-medium mb-1.5 block'>Signature Code</label>
                         <Input 
                           placeholder='Enter your secret code' 

@@ -95,17 +95,17 @@ export async function editPatientAction(
 }
 
 // delete patient
-export async function deletePatientAction(patientId: number) {
+export async function deletePatientAction(patientId: number): Promise<boolean> {
   const res = await apiClient<{ success?: boolean }>(`/patients/${patientId}`, {
     method: 'DELETE',
   });
 
   if (!res.ok) {
-    return { ok: false, error: res.error || 'Failed to delete patient' };
+    throw new Error(res.error || 'Failed to delete patient via API');
   }
 
   revalidatePath('/dashboard/patients');
-  return { ok: true };
+  return true;
 }
 
 // create patient

@@ -42,7 +42,9 @@ export async function apiClient<T>(
 
   try {
     const res = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, fetchOptions);
-    if (res.status === 401) {
+    
+    // Default 401 behavior is to redirect to login, unless skipAuthRedirect is true
+    if (res.status === 401 && !options.skipAuthRedirect) {
       // Clear cookies on unauthorized
       cookieStore.delete('token');
       cookieStore.delete('refresh_token');
@@ -52,23 +54,37 @@ export async function apiClient<T>(
       const referer = headerList.get('referer') || '/';
       redirect(`/?error=session_expired&callback=${encodeURIComponent(referer)}`);
     }
+
     // if 403 Forbidden, redirect to custom forbidden page
     if (res.status === 403) {
       redirect('/forbidden');
     }
 
     if (!res.ok) {
-      let error = 'Something went wrong. Please try again later.';
+      let message = '';
+      let code = res.status;
+      let apiStatus = res.statusText;
+
       try {
         const body = await res.json();
         const apiError = body?.message || body?.detail || body?.error;
         if (typeof apiError === 'string' && apiError.length > 0) {
-          error = apiError;
+          message = apiError;
         }
+        if (body?.code) code = body.code;
+        if (body?.status && typeof body.status === 'string') apiStatus = body.status;
       } catch {
-        // use default message
+        // use status text as fallback if no body
+        message = res.statusText;
       }
-      return { ok: false, error, status: res.status };
+
+      return {
+        ok: false,
+        error: message || 'Something went wrong. Please try again later.',
+        status: res.status,
+        code,
+        apiStatus,
+      };
     }
 
     let data: T = {} as T;
@@ -93,6 +109,8 @@ export async function apiClient<T>(
       ok: false,
       error: 'Unable to connect. Please check your internet connection or try again later.',
       status: 0,
+      code: 0,
+      apiStatus: 'Network Error',
     };
   }
 }
